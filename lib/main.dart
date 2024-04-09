@@ -7,17 +7,16 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (context) => MyAppState(),
       child: MaterialApp(
-        title: 'Welcome to Flutter',
+        title: 'Flutter Demo',
         theme: ThemeData(
-          useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
+          primarySwatch: Colors.deepOrange,
         ),
         home: MyHomePage(),
       ),
@@ -26,7 +25,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MyAppState extends ChangeNotifier {
-  var current = WordPair.random();
+  late final WordPair current = WordPair.random();
 }
 
 class MyHomePage extends StatelessWidget {
@@ -35,12 +34,58 @@ class MyHomePage extends StatelessWidget {
     var appState = context.watch<MyAppState>();
 
     return Scaffold(
-      body: Column(
-        children: [
-          Text('Hello World'),
-          Text(appState.current.asLowerCase),
-        ],
+      appBar: AppBar(
+        title: Text('Flutter Demo'),
       ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('Hello World'),
+            Text(appState.current.asLowerCase),
+            SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildContainer(),
+                SizedBox(width: 20),
+                _buildStack(),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContainer() {
+    return Container(
+      width: 100,
+      height: 100,
+      color: Colors.blue,
+      child: Center(child: Text('Container')),
+    );
+  }
+
+  Widget _buildStack() {
+    return Stack(
+      children: [
+        Container(
+          width: 100,
+          height: 100,
+          color: Colors.green,
+        ),
+        Positioned(
+          top: 0,
+          left: 0,
+          child: Container(
+            width: 50,
+            height: 50,
+            color: Colors.red,
+            child: Center(child: Text('Text')),
+          ),
+        ),
+      ],
     );
   }
 }
