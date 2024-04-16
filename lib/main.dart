@@ -37,23 +37,72 @@ class MyHomePage extends StatelessWidget {
       appBar: AppBar(
         title: Text('Flutter Demo'),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('Hello World'),
-            Text(appState.current.asLowerCase),
-            SizedBox(height: 20),
-            Row(
+      body: Stack(
+        children: [
+          // Background image
+          Image.asset(
+            'assets/background_image.jpg', // Ruta de la imagen
+            fit: BoxFit.cover, // Ajustar la imagen para cubrir toda la pantalla
+            width: double.infinity,
+            height: double.infinity,
+          ),
+          Center(
+            child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _buildContainer(),
-                SizedBox(width: 20),
-                _buildStack(),
+                Text(
+                  'Hello World',
+                  style: TextStyle(
+                    fontSize: 48,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    shadows: [
+                      Shadow(
+                        blurRadius: 5.0,
+                        color: Colors.black,
+                        offset: Offset(2.0, 2.0),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 10),
+                Text(
+                  appState.current.asLowerCase,
+                  style: TextStyle(
+                    fontSize: 24,
+                    color: Colors.white,
+                    shadows: [
+                      Shadow(
+                        blurRadius: 3.0,
+                        color: Colors.black,
+                        offset: Offset(1.0, 1.0),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _buildContainer(),
+                    SizedBox(width: 20),
+                    _buildStack(),
+                  ],
+                ),
               ],
             ),
-          ],
-        ),
+          ),
+          // Icono en la esquina superior derecha
+          Positioned(
+            top: 20,
+            right: 20,
+            child: Icon(
+              Icons.star,
+              color: Colors.yellow,
+              size: 40,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -63,7 +112,12 @@ class MyHomePage extends StatelessWidget {
       width: 100,
       height: 100,
       color: Colors.blue,
-      child: Center(child: Text('Container')),
+      child: Center(
+        child: Text(
+          'Container',
+          style: TextStyle(fontSize: 16, color: Colors.white),
+        ),
+      ),
     );
   }
 
@@ -82,7 +136,12 @@ class MyHomePage extends StatelessWidget {
             width: 50,
             height: 50,
             color: Colors.red,
-            child: Center(child: Text('Text')),
+            child: Center(
+              child: Text(
+                'Text',
+                style: TextStyle(fontSize: 14, color: Colors.white),
+              ),
+            ),
           ),
         ),
       ],
