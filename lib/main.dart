@@ -1,150 +1,107 @@
-import 'package:english_words/english_words.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 void main() {
   runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
-
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => MyAppState(),
-      child: MaterialApp(
-        title: 'Flutter Demo',
-        theme: ThemeData(
-          primarySwatch: Colors.deepOrange,
-        ),
-        home: MyHomePage(),
+    return MaterialApp(
+      title: 'Lista de Pokémon',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
       ),
+      home: PokemonListPage(),
     );
   }
 }
 
-class MyAppState extends ChangeNotifier {
-  late final WordPair current = WordPair.random();
+class PokemonListPage extends StatefulWidget {
+  @override
+  _PokemonListPageState createState() => _PokemonListPageState();
 }
 
-class MyHomePage extends StatelessWidget {
+class _PokemonListPageState extends State<PokemonListPage> {
+  List<String> pokemonList = [];
+  int offset = 0;
+  int limit = 20;
+  bool isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchPokemonList();
+  }
+
+  Future<void> fetchPokemonList() async {
+    if (isLoading) return;
+
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      final response = await http.get('https://pokeapi.co/api/v2/pokemon?offset=$offset&limit=$limit');
+
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        final List<dynamic> results = decoded['results'];
+
+        for (var pokemonData in results) {
+          final pokemonName = pokemonData['name'];
+          setState(() {
+            pokemonList.add(pokemonName);
+          });
+        }
+
+        final nextUrl = decoded['next'];
+        if (nextUrl != null) {
+          offset += limit;
+        }
+      } else {
+        throw Exception('Error al cargar la lista de Pokémon. Código de estado: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error: $e');
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    var appState = context.watch<MyAppState>();
-
     return Scaffold(
       appBar: AppBar(
-        title: Text('Flutter Demo'),
+        title: Text('Lista de Pokémon'),
       ),
-      body: Stack(
-        children: [
-          // Background image
-          Image.asset(
-            'assets/background_image.jpg', // Ruta de la imagen
-            fit: BoxFit.cover, // Ajustar la imagen para cubrir toda la pantalla
-            width: double.infinity,
-            height: double.infinity,
-          ),
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'Hello World',
-                  style: TextStyle(
-                    fontSize: 48,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    shadows: [
-                      Shadow(
-                        blurRadius: 5.0,
-                        color: Colors.black,
-                        offset: Offset(2.0, 2.0),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 10),
-                Text(
-                  appState.current.asLowerCase,
-                  style: TextStyle(
-                    fontSize: 24,
-                    color: Colors.white,
-                    shadows: [
-                      Shadow(
-                        blurRadius: 3.0,
-                        color: Colors.black,
-                        offset: Offset(1.0, 1.0),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _buildContainer(),
-                    SizedBox(width: 20),
-                    _buildStack(),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          // Icono en la esquina superior derecha
-          Positioned(
-            top: 20,
-            right: 20,
-            child: Icon(
-              Icons.star,
-              color: Colors.yellow,
-              size: 40,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+      body: pokemonList.isEmpty
+          ? Center(
+              child: CircularProgressIndicator(),
+            )
+          : ListView.builder(
+              itemCount: pokemonList.length + 1,
+              itemBuilder: (context, index) {
+                if (index == pokemonList.length) {
+                  return isLoading
+                      ? Center(
+                          child: CircularProgressIndicator(),
+                        )
+                      : SizedBox.shrink();
+                }
 
-  Widget _buildContainer() {
-    return Container(
-      width: 100,
-      height: 100,
-      color: Colors.blue,
-      child: Center(
-        child: Text(
-          'Container',
-          style: TextStyle(fontSize: 16, color: Colors.white),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStack() {
-    return Stack(
-      children: [
-        Container(
-          width: 100,
-          height: 100,
-          color: Colors.green,
-        ),
-        Positioned(
-          top: 0,
-          left: 0,
-          child: Container(
-            width: 50,
-            height: 50,
-            color: Colors.red,
-            child: Center(
-              child: Text(
-                'Text',
-                style: TextStyle(fontSize: 14, color: Colors.white),
-              ),
+                return ListTile(
+                  title: Text(pokemonList[index]),
+                );
+              },
+              onEndReached: () {
+                fetchPokemonList();
+              },
             ),
-          ),
-        ),
-      ],
     );
   }
 }
