@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   runApp(MyApp());
 }
 
@@ -25,7 +29,6 @@ class PokemonListPage extends StatefulWidget {
 }
 
 class _PokemonListPageState extends State<PokemonListPage> {
-  List<String> pokemonList = [];
   int offset = 0;
   int limit = 20;
   bool isLoading = false;
@@ -52,8 +55,8 @@ class _PokemonListPageState extends State<PokemonListPage> {
 
         for (var pokemonData in results) {
           final pokemonName = pokemonData['name'];
-          setState(() {
-            pokemonList.add(pokemonName);
+          await FirebaseFirestore.instance.collection('pokemons').add({
+            'name': pokemonName,
           });
         }
 
@@ -79,29 +82,29 @@ class _PokemonListPageState extends State<PokemonListPage> {
       appBar: AppBar(
         title: Text('Lista de Pokémon'),
       ),
-      body: pokemonList.isEmpty
-          ? Center(
-              child: CircularProgressIndicator(),
-            )
-          : ListView.builder(
-              itemCount: pokemonList.length + 1,
-              itemBuilder: (context, index) {
-                if (index == pokemonList.length) {
-                  return isLoading
-                      ? Center(
-                          child: CircularProgressIndicator(),
-                        )
-                      : SizedBox.shrink();
-                }
+      body: StreamBuilder(
+        stream: FirebaseFirestore.instance.collection('pokemons').snapshots(),
+        builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          }
 
-                return ListTile(
-                  title: Text(pokemonList[index]),
-                );
-              },
-              onEndReached: () {
-                fetchPokemonList();
-              },
-            ),
+          final pokemons = snapshot.data!.docs;
+
+          return ListView.builder(
+            itemCount: pokemons.length,
+            itemBuilder: (context, index) {
+              final pokemon = pokemons[index];
+              return ListTile(
+                title: Text(pokemon['name']),
+              );
+            },
+          );
+        },
+      ),
     );
   }
 }
+
+
+ 
